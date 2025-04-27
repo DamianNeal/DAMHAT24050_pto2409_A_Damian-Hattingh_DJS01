@@ -1,34 +1,64 @@
-/**
- * Debugging Guide
- * 1. Make the code more readable
- * 2. Pick up calculation errors
- * 3. Make these calculations robust such that the calculation does not give an incorrect result, it throws an error to the user if something has gone wrong (parameter used with an incorrect unit of measurement, etc)
- */
+// Mars Climate Orbiter Challenge - Corrected Code
 
 // Given Parameters
-const vel = 10000; // velocity (km/h)
-const acc = 3; // acceleration (m/s^2)
-const time = 3600; // seconds (1 hour)
-const d = 0; // distance (km)
-const fuel = 5000; // remaining fuel (kg)
-const fbr = 0.5; // fuel burn rate (kg/s)
+const params = {
+  vel: 10000, // initial velocity in km/h
+  acc: 3,     // acceleration in m/s²
+  time: 3600, // time in seconds
+  d: 0,       // initial distance in km
+  fuel: 5000, // initial fuel in kg
+  fbr: 0.5    // fuel burn rate in kg/s
+};
 
-
-const d2 = d + (vel*time) //calcultes new distance
-const rf = fbr*time //calculates remaining fuel
-const vel2 = calcNewVel(acc, vel, time) //calculates new velocity based on acceleration
-
-// Pick up an error with how the function below is called and make it robust to such errors
-calcNewVel = (vel, acc, time) => { 
-  return vel + (acc*time)
+// Function to validate parameters
+function validateParams({ vel, acc, time, d, fuel, fbr }) {
+  if (typeof vel !== "number" || typeof acc !== "number" || typeof time !== "number" || 
+      typeof d !== "number" || typeof fuel !== "number" || typeof fbr !== "number") {
+    throw new Error("All parameters must be numbers.");
+  }
+  if (vel < 0 || acc < 0 || time < 0 || fuel < 0 || fbr < 0) {
+    throw new Error("Parameters cannot be negative.");
+  }
 }
 
-console.log(`Corrected New Velocity: ${vel2} km/h`);
-console.log(`Corrected New Distance: ${d2} km`);
-console.log(`Corrected Remaining Fuel: ${rf} kg`);
+// Function to calculate new velocity
+function calcNewVel({ vel, acc, time }) {
+  // Convert acceleration from m/s² to km/h²
+  const accInKmPerH2 = acc * 3600; 
+  return vel + (accInKmPerH2 * (time / 3600)); // time/3600 to match km/h
+}
 
+// Function to calculate new distance
+function calcNewDistance({ vel, acc, time, d }) {
+  // Convert velocity from km/h to km/s
+  const velInKms = vel / 3600;
+  // Convert acceleration from m/s² to km/s²
+  const accInKms2 = acc / 1000;
+  return d + (velInKms * time) + (0.5 * accInKms2 * Math.pow(time, 2));
+}
 
+// Function to calculate remaining fuel
+function calcRemainingFuel({ fuel, fbr, time }) {
+  const burnedFuel = fbr * time;
+  const remainingFuel = fuel - burnedFuel;
+  if (remainingFuel < 0) {
+    throw new Error("Fuel exhausted. Remaining fuel cannot be negative.");
+  }
+  return remainingFuel;
+}
 
+// Main execution
+try {
+  validateParams(params);
 
+  const newVelocity = calcNewVel(params);
+  const newDistance = calcNewDistance(params);
+  const remainingFuel = calcRemainingFuel(params);
 
+  console.log(`Corrected New Velocity: ${newVelocity.toFixed(2)} km/h`);
+  console.log(`Corrected New Distance: ${newDistance.toFixed(2)} km`);
+  console.log(`Corrected Remaining Fuel: ${remainingFuel.toFixed(2)} kg`);
 
+} catch (error) {
+  console.error("Error:", error.message);
+}
